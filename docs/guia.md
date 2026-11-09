@@ -80,6 +80,12 @@ cd tests && npm install && npx playwright test   # frontend con Playwright (API 
 
 Si Playwright pide un Chromium que no tenés, el config usa el que ya esté en `%LOCALAPPDATA%\ms-playwright` o el indicado en la variable `CHROMIUM_PATH`.
 
+## Estructura del repo y Netlify
+
+- `site/` es lo único que se publica (`index.html`, `_headers`, `evento_dom.jpeg`). `netlify.toml` fija `publish = "site"`; build command vacío.
+- Fuera de `site/` quedan `code_app_script.gs`, `docs/` y `tests/`, que no se sirven por web.
+- Vista previa local sin tocar Google ni Netlify: `node tests/preview-server.js` → http://localhost:5173/
+
 ## Publicar en Netlify (plan gratis)
 
 Cada push a la rama principal es un deploy a producción y gasta **15 de los 300 créditos mensuales**. Trabajá en una rama aparte, probá todo en local y hacé **un solo merge** a la principal.

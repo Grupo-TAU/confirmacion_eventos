@@ -72,8 +72,10 @@ test('el input tel tiene el mismo estilo que el de texto (y :focus)', async ({ p
   });
   expect(await css('#telefono')).toBe(await css('#nombre'));
   await page.locator('#telefono').focus();
+  await page.waitForTimeout(400);   // el borde y la sombra tienen una transición de .15s
   const focusTel = await page.locator('#telefono').evaluate(el => getComputedStyle(el).boxShadow);
   await page.locator('#nombre').focus();
+  await page.waitForTimeout(400);
   const focusTxt = await page.locator('#nombre').evaluate(el => getComputedStyle(el).boxShadow);
   expect(focusTel).toBe(focusTxt);
   expect(focusTel).not.toBe('none');

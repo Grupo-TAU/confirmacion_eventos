@@ -18,7 +18,7 @@ const ev = env.hojas.Eventos;
  ['inactivo', 'Evento desactivado', '', new Date(2026, 11, 20), '19:00', 'Montevideo', new Date(2099, 0, 1), 3, false, '#b45309']]
   .forEach((fila, i) => fila.forEach((v, j) => ev.cells.set(ev._key(3 + i, j + 1), v)));
 
-const html = () => fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8')
+const html = () => fs.readFileSync(path.join(__dirname, '..', 'site', 'index.html'), 'utf8')
   .replace(/const API_URL = '[^']*';/, "const API_URL = '/api';");
 
 function filasTexto() {

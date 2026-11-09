@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0f766e">
+<title>Confirmación de asistencia</title>
+
+<!-- Vista previa del link en WhatsApp (ajustá estos textos antes de mandar el primer mensaje:
+     WhatsApp guarda la vista previa y después cuesta que se actualice). -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Confirmá tu asistencia · Evento Dom Desarrollos">
+<meta property="og:description" content="¡Cerramos el año juntos y compartiremos novedades! Confirmá en 30 segundos.">
+<!-- Imagen de la vista previa. WhatsApp exige una URL ABSOLUTA: tiene que coincidir con el nombre real de tu sitio en Netlify.
+     Si usás otro nombre que "confirma-domdesarrollos", cambialo en las tres líneas de abajo. -->
+<meta property="og:url" content="https://confirma-domdesarrollos.netlify.app/">
+<meta property="og:image" content="https://confirma-domdesarrollos.netlify.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --accent:#0f766e; --bg:#f3f4f6; --card:#fff; --text:#111827; --muted:#6b7280;
+    --line:#e5e7eb; --soft:#f3f4f6; --err:#b91c1c; --r:20px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg); color:var(--text); min-height:100vh;
+    display:flex; justify-content:center; padding:20px 16px 40px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{width:100%; max-width:440px}
+  .card{background:var(--card); border-radius:var(--r); overflow:hidden;
+    box-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 30px rgba(0,0,0,.07)}
+
+  /* Cabecera */
+  .hero{background:var(--accent); color:#fff; padding:30px 24px 26px; position:relative; overflow:hidden}
+  .hero::before,.hero::after{content:''; position:absolute; border-radius:50%; background:rgba(255,255,255,.09)}
+  .hero::before{width:220px; height:220px; right:-70px; top:-90px}
+  .hero::after{width:120px; height:120px; right:40px; bottom:-70px}
+  .eyebrow{position:relative; font-size:12px; font-weight:500; letter-spacing:.09em; text-transform:uppercase; opacity:.85; margin:0 0 10px}
+  h1{position:relative; font-size:27px; line-height:1.15; margin:0; font-weight:700}
+  .desc{position:relative; margin:10px 0 0; opacity:.92; font-size:15px; line-height:1.45}
+
+  .meta{display:grid; gap:12px; padding:18px 24px; border-bottom:1px solid var(--line)}
+  .meta div{display:flex; gap:12px; align-items:center; font-size:15px}
+  .meta svg{flex:none; width:18px; height:18px; color:var(--accent)}
+  .meta a{color:inherit; text-decoration:underline; text-decoration-color:var(--line); text-underline-offset:3px}
+  .meta .lim{color:var(--muted); font-size:14px}
+
+  /* Formulario */
+  .body{padding:22px 24px 26px}
+  .field{margin-bottom:22px}
+  .lbl{display:block; font-size:13px; font-weight:500; color:var(--muted); margin-bottom:8px}
+  input[type=text],input[type=email]{
+    width:100%; font:inherit; font-size:16px; padding:14px; color:var(--text);
+    border:1.5px solid var(--line); border-radius:12px; outline:none; background:#fff;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  input[type=text]:focus,input[type=email]:focus{border-color:var(--accent); box-shadow:0 0 0 4px rgba(15,118,110,.12)}
+  input.bad{border-color:var(--err)}
+
+  .seg{display:grid; grid-template-columns:1fr 1fr; background:var(--soft); border-radius:12px; padding:4px; gap:4px}
+  .seg button{font:inherit; font-size:15px; font-weight:500; border:0; background:transparent;
+    padding:11px 8px; border-radius:9px; cursor:pointer; color:var(--muted); transition:all .15s}
+  .seg button.on{background:#fff; color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,.12)}
+
+  .stepper{display:flex; align-items:center; justify-content:space-between;
+    border:1.5px solid var(--line); border-radius:12px; padding:6px}
+  .stepper button{width:46px; height:46px; border-radius:10px; border:0; background:var(--soft);
+    font-size:24px; line-height:1; cursor:pointer; color:var(--text); transition:background .15s}
+  .stepper button:hover:not(:disabled){background:var(--line)}
+  .stepper button:disabled{opacity:.3; cursor:default}
+  .stepper .n{font-size:24px; font-weight:700; min-width:48px; text-align:center; font-variant-numeric:tabular-nums}
+  .hint{font-size:13px; color:var(--muted); margin-top:8px; line-height:1.4}
+
+  .btn{width:100%; font:inherit; font-size:16px; font-weight:700; border:0; border-radius:12px;
+    padding:16px; background:var(--accent); color:#fff; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:10px; transition:transform .06s, opacity .15s}
+  .btn:active{transform:scale(.985)}
+  .btn[disabled]{opacity:.75; cursor:wait}
+  .btn.ghost{background:transparent; color:var(--accent); border:1.5px solid var(--line); font-weight:500}
+  .spin{display:none; width:18px; height:18px; border:2.5px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:rot .7s linear infinite}
+  .btn[disabled] .spin{display:block}
+  @keyframes rot{to{transform:rotate(360deg)}}
+
+  .err{color:var(--err); font-size:14px; margin:0 0 14px; display:none}
+  .err.show{display:block}
+  .hp{position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden}
+
+  /* Estados */
+  .state{text-align:center; padding:36px 24px 30px}
+  .badge{width:76px; height:76px; border-radius:50%; display:grid; place-items:center; margin:0 auto 18px;
+    background:var(--soft); animation:pop .45s cubic-bezier(.2,.9,.3,1.3)}
+  .badge svg{width:36px; height:36px; color:var(--accent)}
+  .badge.muted svg{color:var(--muted)}
+  @keyframes pop{from{transform:scale(.5); opacity:0} to{transform:scale(1); opacity:1}}
+  .state h2{margin:0 0 8px; font-size:22px}
+  .state p{margin:0 0 22px; color:var(--muted); line-height:1.5}
+  .state p:last-child{margin-bottom:0}
+
+  .foot{text-align:center; font-size:12px; color:var(--muted); margin-top:16px}
+  .fade{animation:fade .25s ease-out}
+  @keyframes fade{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+  [hidden]{display:none !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <header class="hero" id="hero" hidden>
+      <p class="eyebrow">Confirmación de asistencia</p>
+      <h1 id="ev-nombre"></h1>
+      <p class="desc" id="ev-desc" hidden></p>
+    </header>
+    <div class="meta" id="meta" hidden></div>
+
+    <!-- Cargando -->
+    <section id="v-load" class="state"><p>Cargando…</p></section>
+
+    <!-- Formulario -->
+    <section id="v-form" hidden>
+      <form class="body" id="form" novalidate autocomplete="on">
+        <div class="field">
+          <label class="lbl" for="nombre">Nombre y apellido</label>
+          <input type="text" id="nombre" name="name" autocomplete="name" placeholder="Ej. Ana Rodríguez" maxlength="80">
+        </div>
+
+        <div class="field">
+          <label class="lbl" for="email">Email</label>
+          <input type="email" id="email" name="email" autocomplete="email" inputmode="email"
+                 autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="nombre@correo.com" maxlength="120">
+          <div class="hint">Lo usamos solo para este evento. Si necesitás cambiar tu respuesta, volvé a entrar con el mismo email.</div>
+        </div>
+
+        <div class="field">
+          <span class="lbl">¿Vas a asistir?</span>
+          <div class="seg" role="group">
+            <button type="button" id="si" class="on">Sí, voy</button>
+            <button type="button" id="no">No puedo ir</button>
+          </div>
+        </div>
+
+        <div class="field" id="f-acomp">
+          <span class="lbl">Acompañantes</span>
+          <div class="stepper">
+            <button type="button" id="menos" aria-label="Quitar acompañante">−</button>
+            <span class="n" id="n">0</span>
+            <button type="button" id="mas" aria-label="Agregar acompañante">+</button>
+          </div>
+          <div class="hint" id="hint"></div>
+        </div>
+
+        <div class="hp" aria-hidden="true"><input type="text" id="website" tabindex="-1" autocomplete="off"></div>
+
+        <p class="err" id="err"></p>
+        <button class="btn" id="enviar" type="submit"><span class="spin"></span><span id="enviar-txt">Confirmar</span></button>
+      </form>
+    </section>
+
+    <!-- Éxito -->
+    <section id="v-ok" class="state" hidden>
+      <div class="badge" id="ok-badge"></div>
+      <h2 id="ok-titulo"></h2>
+      <p id="ok-texto"></p>
+      <button class="btn ghost" id="editar" type="button">Modificar mi respuesta</button>
+    </section>
+
+    <!-- Cerrado -->
+    <section id="v-cerrado" class="state" hidden>
+      <div class="badge muted" id="cerrado-badge"></div>
+      <h2>Confirmaciones cerradas</h2>
+      <p>El plazo para confirmar asistencia a este evento ya terminó. Si necesitás hacer un cambio, contactá a la organización.</p>
+    </section>
+
+    <!-- No encontrado / error -->
+    <section id="v-404" class="state" hidden>
+      <div class="badge muted" id="nf-badge"></div>
+      <h2 id="nf-titulo">Evento no encontrado</h2>
+      <p id="nf-texto">El link parece incompleto. Revisá que lo hayas abierto completo desde el mensaje.</p>
+      <button class="btn ghost" id="reintentar" type="button" hidden>Reintentar</button>
+    </section>
+  </div>
+  <p class="foot" id="foot"></p>
+</div>
+
+<script>
+  // ───── Configuración ─────
+  // URL /exec de la implementación de Apps Script (sin parámetros).
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwV3guYSEk14SS67h8Wjf3cIRPtVsV8Tiz7uB75tXWAnRrH2nMSV-y9zJEiPI-286NfqQ/exec';
+
+  // Con ?debug en la URL, los errores de JavaScript se muestran en pantalla.
+  if (/[?&]debug\b/.test(location.search)) {
+    window.addEventListener('error', function (e) {
+      var d = document.createElement('pre');
+      d.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;margin:0;padding:10px;background:#fee2e2;color:#7f1d1d;font:12px monospace;white-space:pre-wrap;z-index:9999;border-radius:8px';
+      d.textContent = 'Error: ' + e.message + ' (linea ' + e.lineno + ')';
+      document.body.appendChild(d);
+    });
+  }
+
+  const $ = s => document.querySelector(s);
+  const PARAMS = new URLSearchParams(location.search);
+  const EVENTO_ID = (PARAMS.get('e') || '').trim();
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+  const ICON = {
+    cal:  '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+    hora: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+    pin:  '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>',
+    lim:  '<path d="M5 22h14M5 2h14M17 22v-4.2a2 2 0 0 0-.6-1.4L12 12l-4.4 4.4a2 2 0 0 0-.6 1.4V22M7 2v4.2a2 2 0 0 0 .6 1.4L12 12l4.4-4.4a2 2 0 0 0 .6-1.4V2"/>',
+    ok:   '<path d="M20 6 9 17l-5-5"/>',
+    x:    '<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/>',
+    lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    q:    '<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/>',
+  };
+  const svg = k => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + ICON[k] + '</svg>';
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  let ev = null, asiste = true, acomp = 0;
+
+  // ───── API ─────
+  // POST como text/plain para evitar el preflight CORS (Apps Script no responde OPTIONS).
+  async function api(method, data) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 20000);
+    try {
+      const opts = { method, signal: ctrl.signal, credentials: 'omit', redirect: 'follow' };
+      let url = API_URL;
+      if (method === 'GET') {
+        url += '?' + new URLSearchParams(data).toString();
+      } else {
+        opts.headers = { 'Content-Type': 'text/plain;charset=utf-8' };
+        opts.body = JSON.stringify(data);
+      }
+      const res = await fetch(url, opts);
+      return await res.json();
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  // ───── Vistas ─────
+  function show(id) {
+    ['v-load','v-form','v-ok','v-cerrado','v-404'].forEach(v => $('#' + v).hidden = v !== id);
+    $('#' + id).classList.remove('fade'); void $('#' + id).offsetWidth; $('#' + id).classList.add('fade');
+  }
+
+  function mostrarProblema(titulo, texto, reintentar) {
+    $('#nf-badge').innerHTML = svg('q');
+    $('#nf-titulo').textContent = titulo;
+    $('#nf-texto').textContent = texto;
+    $('#reintentar').hidden = !reintentar;
+    show('v-404');
+  }
+
+  function guardado() { try { return JSON.parse(localStorage.getItem('rsvp:' + EVENTO_ID) || '{}'); } catch (e) { return {}; } }
+  function guardar(o) { try { localStorage.setItem('rsvp:' + EVENTO_ID, JSON.stringify(o)); } catch (e) {} }
+
+  function render() {
+    $('#si').classList.toggle('on', asiste);
+    $('#no').classList.toggle('on', !asiste);
+    $('#f-acomp').hidden = !asiste;
+    $('#n').textContent = acomp;
+    $('#menos').disabled = acomp <= 0;
+    $('#mas').disabled = acomp >= ev.maxAcomp;
+    const total = 1 + acomp;
+    $('#hint').textContent = acomp === 0
+      ? 'Vas solo/a. Podés sumar hasta ' + ev.maxAcomp + '.'
+      : total + ' personas en total contándote a vos.';
+    $('#enviar-txt').textContent = asiste ? 'Confirmar asistencia' : 'Enviar respuesta';
+  }
+
+  function err(msg) {
+    $('#err').textContent = msg || '';
+    $('#err').classList.toggle('show', !!msg);
+  }
+
+  function pintarEvento() {
+    document.documentElement.style.setProperty('--accent', ev.color);
+    document.title = ev.nombre;
+    $('#hero').hidden = false;
+    $('#ev-nombre').textContent = ev.nombre;
+    if (ev.descripcion) { $('#ev-desc').textContent = ev.descripcion; $('#ev-desc').hidden = false; }
+
+    const rows = [];
+    if (ev.fechaTxt) rows.push('<div>' + svg('cal') + '<span>' + esc(ev.fechaTxt.charAt(0).toUpperCase() + ev.fechaTxt.slice(1)) + '</span></div>');
+    if (ev.hora)     rows.push('<div>' + svg('hora') + '<span>' + esc(ev.hora) + ' h</span></div>');
+    if (ev.lugar)    rows.push('<div>' + svg('pin') + '<a href="https://www.google.com/maps/search/?api=1&amp;query=' + encodeURIComponent(ev.lugar) + '" target="_blank" rel="noopener">' + esc(ev.lugar) + '</a></div>');
+    if (ev.limiteTxt && ev.abierto) rows.push('<div class="lim">' + svg('lim') + '<span>Confirmá hasta el ' + esc(ev.limiteTxt) + '</span></div>');
+    if (rows.length) { $('#meta').innerHTML = rows.join(''); $('#meta').hidden = false; }
+  }
+
+  async function cargar() {
+    show('v-load');
+    if (!EVENTO_ID) { mostrarProblema('Evento no encontrado', 'El link parece incompleto. Revisá que lo hayas abierto completo desde el mensaje.', false); return; }
+
+    let r = null;
+    for (let intento = 0; intento < 2 && !r; intento++) {
+      try { r = await api('GET', { action: 'evento', e: EVENTO_ID }); } catch (x) { r = null; }
+    }
+    if (!r || !r.ok) { mostrarProblema('No se pudo cargar', 'Revisá tu conexión y probá de nuevo.', true); return; }
+    if (!r.evento) { mostrarProblema('Evento no encontrado', 'El link parece incompleto. Revisá que lo hayas abierto completo desde el mensaje.', false); return; }
+
+    ev = r.evento;
+    pintarEvento();
+    if (!ev.abierto) { $('#cerrado-badge').innerHTML = svg('lock'); show('v-cerrado'); return; }
+
+    const g = guardado();
+    $('#nombre').value = (PARAMS.get('n') || g.nombre || '').slice(0, 80);
+    $('#email').value = (PARAMS.get('m') || g.email || '').slice(0, 120);
+    render();
+    show('v-form');
+  }
+
+  // ───── Eventos ─────
+  $('#si').onclick    = () => { asiste = true;  render(); };
+  $('#no').onclick    = () => { asiste = false; render(); };
+  $('#menos').onclick = () => { if (acomp > 0) acomp--; render(); };
+  $('#mas').onclick   = () => { if (acomp < ev.maxAcomp) acomp++; render(); };
+  $('#nombre').oninput = () => { $('#nombre').classList.remove('bad'); err(''); };
+  $('#email').oninput  = () => { $('#email').classList.remove('bad'); err(''); };
+  $('#editar').onclick = () => { show('v-form'); $('#nombre').focus(); };
+  $('#reintentar').onclick = () => cargar();
+
+  $('#form').onsubmit = async e => {
+    e.preventDefault();
+    const nombre = $('#nombre').value.trim().replace(/\s+/g, ' ');
+    const email = $('#email').value.trim().toLowerCase();
+    if (nombre.length < 5 || nombre.split(' ').length < 2) {
+      $('#nombre').classList.add('bad'); err('Ingresá tu nombre y apellido.'); $('#nombre').focus(); return;
+    }
+    if (!EMAIL_RE.test(email)) {
+      $('#email').classList.add('bad'); err('Ingresá un email válido.'); $('#email').focus(); return;
+    }
+    err('');
+    const btn = $('#enviar'); btn.disabled = true;
+
+    try {
+      const r = await api('POST', { eventoId: ev.id, nombre, email, asiste, acompanantes: acomp, website: $('#website').value });
+      if (!r || !r.ok) throw new Error((r && r.error) || 'No se pudo enviar. Probá de nuevo.');
+      guardar({ nombre: r.nombre || nombre, email });
+      const primer = esc((r.nombre || nombre).split(' ')[0]);
+      if (r.asiste === 'Sí') {
+        $('#ok-badge').className = 'badge'; $('#ok-badge').innerHTML = svg('ok');
+        $('#ok-titulo').innerHTML = '¡Gracias, ' + primer + '!';
+        $('#ok-texto').textContent = (r.actualizado ? 'Actualizamos tu respuesta. ' : '') +
+          (r.acompanantes === 0 ? 'Confirmaste tu asistencia. ¡Te esperamos!'
+            : 'Confirmaste tu asistencia con ' + r.acompanantes + ' acompañante' + (r.acompanantes > 1 ? 's' : '') + '. ¡Los esperamos!');
+      } else {
+        $('#ok-badge').className = 'badge muted'; $('#ok-badge').innerHTML = svg('x');
+        $('#ok-titulo').innerHTML = 'Gracias por avisar, ' + primer;
+        $('#ok-texto').textContent = (r.actualizado ? 'Actualizamos tu respuesta. ' : '') + 'Registramos que no vas a poder asistir.';
+      }
+      show('v-ok');
+    } catch (x) {
+      const msg = (x && x.name === 'TypeError') || (x && x.name === 'AbortError')
+        ? 'No se pudo conectar. Revisá tu conexión y probá de nuevo.'
+        : (x && x.message) || 'No se pudo enviar. Probá de nuevo.';
+      err(msg);
+    } finally {
+      btn.disabled = false;
+    }
+  };
+
+  cargar();
+</script>
+</body>
+</html>

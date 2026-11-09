@@ -59,12 +59,12 @@
   .body{padding:22px 24px 26px}
   .field{margin-bottom:22px}
   .lbl{display:block; font-size:13px; font-weight:500; color:var(--muted); margin-bottom:8px}
-  input[type=text],input[type=email]{
+  input[type=text],input[type=tel]{
     width:100%; font:inherit; font-size:16px; padding:14px; color:var(--text);
     border:1.5px solid var(--line); border-radius:12px; outline:none; background:#fff;
     transition:border-color .15s, box-shadow .15s;
   }
-  input[type=text]:focus,input[type=email]:focus{border-color:var(--accent); box-shadow:0 0 0 4px rgba(15,118,110,.12)}
+  input[type=text]:focus,input[type=tel]:focus{border-color:var(--accent); box-shadow:0 0 0 4px rgba(15,118,110,.12)}
   input.bad{border-color:var(--err)}
 
   .seg{display:grid; grid-template-columns:1fr 1fr; background:var(--soft); border-radius:12px; padding:4px; gap:4px}
@@ -134,10 +134,10 @@
         </div>
 
         <div class="field">
-          <label class="lbl" for="email">Email</label>
-          <input type="email" id="email" name="email" autocomplete="email" inputmode="email"
-                 autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="nombre@correo.com" maxlength="120">
-          <div class="hint">Lo usamos solo para este evento. Si necesitás cambiar tu respuesta, volvé a entrar con el mismo email.</div>
+          <label class="lbl" for="telefono">Celular</label>
+          <input type="tel" id="telefono" name="tel" autocomplete="tel" inputmode="tel"
+                 placeholder="099 123 456" maxlength="25" required>
+          <div class="hint">Lo usamos solo para este evento y para identificar tu respuesta. Si necesitás cambiarla, volvé a entrar con el mismo celular.</div>
         </div>
 
         <div class="field">
@@ -209,7 +209,6 @@
   const $ = s => document.querySelector(s);
   const PARAMS = new URLSearchParams(location.search);
   const EVENTO_ID = (PARAMS.get('e') || '').trim();
-  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
   const ICON = {
     cal:  '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
@@ -315,7 +314,7 @@
 
     const g = guardado();
     $('#nombre').value = (PARAMS.get('n') || g.nombre || '').slice(0, 80);
-    $('#email').value = (PARAMS.get('m') || g.email || '').slice(0, 120);
+    $('#telefono').value = (PARAMS.get('t') || g.telefono || '').slice(0, 25);
     render();
     show('v-form');
   }
@@ -326,27 +325,32 @@
   $('#menos').onclick = () => { if (acomp > 0) acomp--; render(); };
   $('#mas').onclick   = () => { if (acomp < ev.maxAcomp) acomp++; render(); };
   $('#nombre').oninput = () => { $('#nombre').classList.remove('bad'); err(''); };
-  $('#email').oninput  = () => { $('#email').classList.remove('bad'); err(''); };
+  $('#telefono').oninput = () => { $('#telefono').classList.remove('bad'); err(''); };
   $('#editar').onclick = () => { show('v-form'); $('#nombre').focus(); };
   $('#reintentar').onclick = () => cargar();
 
   $('#form').onsubmit = async e => {
     e.preventDefault();
     const nombre = $('#nombre').value.trim().replace(/\s+/g, ' ');
-    const email = $('#email').value.trim().toLowerCase();
+    const telefono = $('#telefono').value.trim();
+    const digitos = telefono.replace(/\D/g, '').length;
     if (nombre.length < 5 || nombre.split(' ').length < 2) {
       $('#nombre').classList.add('bad'); err('Ingresá tu nombre y apellido.'); $('#nombre').focus(); return;
     }
-    if (!EMAIL_RE.test(email)) {
-      $('#email').classList.add('bad'); err('Ingresá un email válido.'); $('#email').focus(); return;
+    // Chequeo básico; la validación real (y la normalización) es la del servidor.
+    if (!telefono) {
+      $('#telefono').classList.add('bad'); err('Ingresá tu celular.'); $('#telefono').focus(); return;
+    }
+    if (digitos < 8 || digitos > 15) {
+      $('#telefono').classList.add('bad'); err('Ingresá un celular válido, por ejemplo 099 123 456.'); $('#telefono').focus(); return;
     }
     err('');
     const btn = $('#enviar'); btn.disabled = true;
 
     try {
-      const r = await api('POST', { eventoId: ev.id, nombre, email, asiste, acompanantes: acomp, website: $('#website').value });
+      const r = await api('POST', { eventoId: ev.id, nombre, telefono, asiste, acompanantes: acomp, website: $('#website').value });
       if (!r || !r.ok) throw new Error((r && r.error) || 'No se pudo enviar. Probá de nuevo.');
-      guardar({ nombre: r.nombre || nombre, email });
+      guardar({ nombre: r.nombre || nombre, telefono });
       const primer = esc((r.nombre || nombre).split(' ')[0]);
       if (r.asiste === 'Sí') {
         $('#ok-badge').className = 'badge'; $('#ok-badge').innerHTML = svg('ok');

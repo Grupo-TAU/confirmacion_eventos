@@ -1,0 +1,12 @@
+{
+  "name": "confirmacion-eventos-tests",
+  "private": true,
+  "scripts": {
+    "test:backend": "node --test backend.test.js",
+    "test:frontend": "playwright test",
+    "test": "node --test backend.test.js && playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0"
+  }
+}

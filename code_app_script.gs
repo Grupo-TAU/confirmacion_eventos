@@ -8,7 +8,7 @@
  *
  * Hojas:
  *   Eventos         → un evento por fila (multi-evento: ?e=<id> en el link del formulario)
- *   Confirmaciones  → una fila por email y evento (deduplicación por email)
+ *   Confirmaciones  → una fila por celular y evento (deduplicación por celular normalizado, E.164)
  *   Resumen         → totales por evento (fórmulas)
  */
 
@@ -24,9 +24,9 @@ const CONFIG = {
 const COLS_EVENTOS = ['id', 'nombre', 'descripcion', 'fecha', 'hora', 'lugar',
   'fecha_limite', 'max_acompanantes', 'activo', 'color'];
 
-// 'email' va al final para no mover las columnas que ya existen.
+// 'telefono' (antes 'email') va al final para no mover las columnas que ya existen.
 const COLS_CONF = ['id', 'evento_id', 'nombre_apellido', 'asiste', 'acompanantes',
-  'total_personas', 'creado', 'actualizado', 'clave', 'ediciones', 'email'];
+  'total_personas', 'creado', 'actualizado', 'clave', 'ediciones', 'telefono'];
 
 const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
@@ -63,8 +63,14 @@ function setup() {
   }
 
   const conf = getOrCreateSheet_(ss, CONFIG.HOJA_CONF, COLS_CONF);
+  // Migración: el encabezado K1 pasó de 'email' a 'telefono' (si falta, getOrCreateSheet_ ya lo creó).
+  const colTel = COLS_CONF.indexOf('telefono') + 1;
+  const encTel = conf.getRange(1, colTel);
+  if (String(encTel.getValue()).trim().toLowerCase() === 'email') {
+    encTel.setValue('telefono').setFontWeight('bold');
+  }
   conf.getRange('G2:H').setNumberFormat('dd/mm/yyyy HH:mm');
-  conf.getRange(1, COLS_CONF.indexOf('email') + 1, conf.getMaxRows(), 1).setNumberFormat('@');
+  conf.getRange(1, colTel, conf.getMaxRows(), 1).setNumberFormat('@');   // teléfono como texto
   conf.hideColumns(COLS_CONF.indexOf('clave') + 1);
 
   let res = ss.getSheetByName(CONFIG.HOJA_RESUMEN);
@@ -139,7 +145,7 @@ function json_(obj) {
 }
 
 /**
- * @param {{eventoId:string, nombre:string, email:string, asiste:boolean, acompanantes:number, website?:string}} p
+ * @param {{eventoId:string, nombre:string, telefono:string, asiste:boolean, acompanantes:number, website?:string}} p
  */
 function registrar(p) {
   if (!p || typeof p !== 'object') throw new UserError('Datos inválidos.');
@@ -154,11 +160,9 @@ function registrar(p) {
     throw new UserError('Ingresá tu nombre y apellido.');
   }
 
-  // Primer carácter alfanumérico: evita que Sheets interprete el valor como fórmula.
-  const email = String(p.email || '').trim().toLowerCase();
-  if (email.length > 120 || !/^[a-z0-9][a-z0-9._%+-]*@[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/.test(email)) {
-    throw new UserError('Ingresá un email válido.');
-  }
+  const telefono = normalizarTelefono_(p.telefono);
+  if (telefono === '') throw new UserError('Ingresá tu celular.');
+  if (telefono === null) throw new UserError('Ingresá un celular válido, por ejemplo 099 123 456.');
 
   const asiste = p.asiste === false ? 'No' : 'Sí';
   const acomp = asiste === 'Sí' ? Number(p.acompanantes) : 0;
@@ -166,7 +170,7 @@ function registrar(p) {
     throw new UserError(`La cantidad de acompañantes debe estar entre 0 y ${ev.maxAcomp}.`);
   }
   const total = asiste === 'Sí' ? 1 + acomp : 0;
-  const clave = ev.id + '|' + email;
+  const clave = ev.id + '|' + telefono;
 
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
@@ -188,8 +192,11 @@ function registrar(p) {
       sh.getRange(fila, col('actualizado')).setValue(ahora);
       sh.getRange(fila, col('ediciones')).setValue(ediciones + 1);
     } else {
+      // El teléfono se escribe aparte, ya con formato texto: si va en appendRow,
+      // Sheets convierte "+598…" en número y se pierde el "+".
       sh.appendRow([Utilities.getUuid(), ev.id, nombre, asiste, acomp, total,
-        ahora, ahora, clave, 0, email]);
+        ahora, ahora, clave, 0, '']);
+      sh.getRange(sh.getLastRow(), col('telefono')).setNumberFormat('@').setValue(telefono);
     }
     return { ok: true, actualizado: !!fila, nombre: nombre, asiste: asiste, acompanantes: acomp };
   } finally {
@@ -266,6 +273,31 @@ function limpiarNombre_(s) {
     .slice(0, 80)
     .toLowerCase()
     .replace(/(^|[\s-])\p{L}/gu, m => m.toUpperCase());
+}
+
+/**
+ * Normaliza un celular a E.164 (+598…).
+ * Devuelve '' si está vacío, null si es inválido y, si no, el número como "+<dígitos>".
+ * Solo se aceptan dígitos, espacios, "+", "(", ")", "." y "-"; el "+" solo al comienzo.
+ */
+function normalizarTelefono_(raw) {
+  const s = String(raw == null ? '' : raw).trim();
+  if (!s) return '';
+  if (!/^[\d\s+().-]+$/.test(s) || s.lastIndexOf('+') > 0) return null;
+
+  let d = s.replace(/\D/g, '');
+  let internacional = s.charAt(0) === '+';
+  if (!internacional && d.startsWith('00')) { d = d.slice(2); internacional = true; }
+
+  if (internacional) {
+    // "+598 099 123 456": el 0 sobrante del formato local no va con el código de país.
+    if (/^5980\d{8}$/.test(d)) d = '598' + d.slice(4);
+    return /^[1-9]\d{7,14}$/.test(d) ? '+' + d : null;
+  }
+  if (/^09\d{7}$/.test(d)) return '+598' + d.slice(1);   // 099 123 456
+  if (/^9\d{7}$/.test(d)) return '+598' + d;             // 99 123 456
+  if (/^598\d{8}$/.test(d)) return '+' + d;              // 598 99 123 456
+  return null;                                           // sin código de país: no se puede inferir
 }
 
 function fechaLarga_(d) {
